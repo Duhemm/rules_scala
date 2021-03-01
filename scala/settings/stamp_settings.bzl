@@ -5,5 +5,5 @@ def _impl(ctx):
 
 stamp_scala_import = rule(
     implementation = _impl,
-    build_setting = config.bool(flag = True),
+    build_setting = config.bool(flag = False),
 )
