@@ -37,11 +37,25 @@ case class FocusedZipImporter(focus: Option[File], zips: List[File], zipFiles: L
       else newPath
   }
 
+  @annotation.tailrec
+  private def traversePath(path: String, zipFile: ZipFile): Option[(ZipEntry, ZipFile)] = {
+    if (path.isEmpty) {
+      None
+    } else {
+      Option(zipFile.getEntry(path)).map((_, zipFile)) match {
+        case None =>
+          val nextPath = path.split("/").tail.mkString("/")
+          traversePath(nextPath, zipFile)
+        case matched => matched
+      }
+    }
+  }
+
   private def resolve(filename: String): Option[(ZipEntry, ZipFile, FocusedZipImporter)] = {
     val fullPath = toZipEntryPath(filename)
     zipFiles
       .iterator
-      .map { z => Option(z.getEntry(fullPath)).map((_, z)) }
+      .map { z: ZipFile => traversePath(fullPath, z) }
       .collectFirst { case Some(s) => s }
       .map { case (ze, z) =>
         // prepare the new focus for this file:
