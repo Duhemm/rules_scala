@@ -49,19 +49,15 @@ def _scala_repl_impl(ctx):
         ],
     )
 
-_scala_repl_attrs = {
-    "jvm_flags": attr.string_list(),
-}
+def make_scala_repl(scala_major, *extras):
+    _scala_repl_attrs = {
+        "jvm_flags": attr.string_list(),
+    }
+    _scala_repl_attrs.update(launcher_template)
+    _scala_repl_attrs.update(implicit_deps(scala_major))
+    _scala_repl_attrs.update(common_attrs(scala_major))
+    _scala_repl_attrs.update(resolve_deps(scala_major))
 
-_scala_repl_attrs.update(launcher_template)
-
-_scala_repl_attrs.update(implicit_deps)
-
-_scala_repl_attrs.update(common_attrs)
-
-_scala_repl_attrs.update(resolve_deps)
-
-def make_scala_repl(*extras):
     return rule(
         attrs = _dicts.add(
             _scala_repl_attrs,
@@ -74,9 +70,9 @@ def make_scala_repl(*extras):
             common_outputs,
             *[extra["outputs"] for extra in extras if "outputs" in extra]
         ),
-        toolchains = ["@io_bazel_rules_scala//scala:toolchain_type"],
+        toolchains = ["@io_bazel_rules_scala//scala:toolchain_type_%s" % scala_major],
         incompatible_use_toolchain_transition = True,
         implementation = _scala_repl_impl,
     )
 
-scala_repl = make_scala_repl()
+scala_repl = make_scala_repl("2.12")

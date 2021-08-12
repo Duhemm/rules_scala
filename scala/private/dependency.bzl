@@ -45,7 +45,8 @@ def get_strict_deps_mode(ctx):
     if not hasattr(ctx.attr, "_dependency_analyzer_plugin"):
         return "off"
 
-    return ctx.toolchains["@io_bazel_rules_scala//scala:toolchain_type"].strict_deps_mode
+    scala_version = ctx.attr._major_scala_version
+    return ctx.toolchains["@io_bazel_rules_scala//scala:toolchain_type_%s" % scala_version].strict_deps_mode
 
 def _is_strict_deps_on(ctx):
     return get_strict_deps_mode(ctx) != "off"

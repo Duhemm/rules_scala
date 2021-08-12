@@ -53,58 +53,52 @@ def _scala_junit_test_impl(ctx):
         ],
     )
 
-_scala_junit_test_attrs = {
-    "prefixes": attr.string_list(default = []),
-    "suffixes": attr.string_list(default = []),
-    "suite_label": attr.label(
-        default = Label(
-            "//src/java/io/bazel/rulesscala/test_discovery:test_discovery",
-        ),
-    ),
-    "suite_class": attr.string(
-        default = "io.bazel.rulesscala.test_discovery.DiscoveredTestSuite",
-    ),
-    "print_discovered_classes": attr.bool(
-        default = False,
-        mandatory = False,
-    ),
-    "jvm_flags": attr.string_list(),
-    "_junit_classpath": attr.label(
-        default = Label("@io_bazel_rules_scala//testing/toolchain:junit_classpath"),
-    ),
-    "_bazel_test_runner": attr.label(
-        default = Label(
-            "@io_bazel_rules_scala//scala:bazel_test_runner_deploy",
-        ),
-        allow_files = True,
-    ),
-}
-
-_junit_resolve_deps = {
-    "_scala_toolchain": attr.label_list(
-        default = [
-            Label(
-                "@io_bazel_rules_scala//scala/private/toolchain_deps:scala_library_classpath",
+def make_scala_junit_test(scala_major, *extras):
+    _scala_junit_test_attrs = {
+        "prefixes": attr.string_list(default = []),
+        "suffixes": attr.string_list(default = []),
+        "suite_label": attr.label(
+            default = Label(
+                "//src/java/io/bazel/rulesscala/test_discovery:test_discovery",
             ),
-            Label("@io_bazel_rules_scala//testing/toolchain:junit_classpath"),
-        ],
-        allow_files = False,
-    ),
-}
+        ),
+        "suite_class": attr.string(
+            default = "io.bazel.rulesscala.test_discovery.DiscoveredTestSuite",
+        ),
+        "print_discovered_classes": attr.bool(
+            default = False,
+            mandatory = False,
+        ),
+        "jvm_flags": attr.string_list(),
+        "_junit_classpath": attr.label(
+            default = Label("@io_bazel_rules_scala//testing/toolchain:junit_classpath_" + scala_major),
+        ),
+        "_bazel_test_runner": attr.label(
+            default = Label(
+                "@io_bazel_rules_scala//scala:bazel_test_runner_deploy",
+            ),
+            allow_files = True,
+        ),
+    }
+    _junit_resolve_deps = {
+        "_scala_toolchain": attr.label_list(
+            default = [
+                Label(
+                    "@io_bazel_rules_scala//scala/private/toolchain_deps:scala_library_classpath_%s" % scala_major,
+                ),
+                Label("@io_bazel_rules_scala//testing/toolchain:junit_classpath_%s" % scala_major),
+            ],
+            allow_files = False,
+        ),
+    }
+    _scala_junit_test_attrs.update(launcher_template)
+    _scala_junit_test_attrs.update(implicit_deps(scala_major))
+    _scala_junit_test_attrs.update(common_attrs(scala_major))
+    _scala_junit_test_attrs.update(_junit_resolve_deps)
+    _scala_junit_test_attrs.update({
+        "tests_from": attr.label_list(providers = [[JavaInfo]]),
+    })
 
-_scala_junit_test_attrs.update(launcher_template)
-
-_scala_junit_test_attrs.update(implicit_deps)
-
-_scala_junit_test_attrs.update(common_attrs)
-
-_scala_junit_test_attrs.update(_junit_resolve_deps)
-
-_scala_junit_test_attrs.update({
-    "tests_from": attr.label_list(providers = [[JavaInfo]]),
-})
-
-def make_scala_junit_test(*extras):
     return rule(
         attrs = _dicts.add(
             _scala_junit_test_attrs,
@@ -117,9 +111,11 @@ def make_scala_junit_test(*extras):
             *[extra["outputs"] for extra in extras if "outputs" in extra]
         ),
         test = True,
-        toolchains = ["@io_bazel_rules_scala//scala:toolchain_type"],
+        toolchains = ["@io_bazel_rules_scala//scala:toolchain_type_%s" % scala_major],
         incompatible_use_toolchain_transition = True,
         implementation = _scala_junit_test_impl,
     )
 
-scala_junit_test = make_scala_junit_test()
+scala_junit_test_212_test = make_scala_junit_test("2.12")
+scala_junit_test_213_test = make_scala_junit_test("2.13")
+scala_junit_test = scala_junit_test_212_test

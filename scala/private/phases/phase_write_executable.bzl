@@ -15,9 +15,11 @@ load(
 def phase_write_executable_scalatest(ctx, p):
     # jvm_flags passed in on the target override scala_test_jvm_flags passed in on the
     # toolchain
+    scala_version = ctx.attr._major_scala_version
+    toolchain = "@io_bazel_rules_scala//scala:toolchain_type_%s" % scala_version
     final_jvm_flags = first_non_empty(
         ctx.attr.jvm_flags,
-        ctx.toolchains["@io_bazel_rules_scala//scala:toolchain_type"].scala_test_jvm_flags,
+        ctx.toolchains[toolchain].scala_test_jvm_flags,
     )
     args = struct(
         rjars = p.coverage_runfiles.rjars,

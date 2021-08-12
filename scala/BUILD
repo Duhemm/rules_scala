@@ -1,51 +1,40 @@
 load("@rules_java//java:defs.bzl", "java_import", "java_library")
 load("//scala:scala_toolchain.bzl", "scala_toolchain")
 load("//scala:providers.bzl", "declare_deps_provider")
+load(":toolchains.bzl", "make_scala_toolchains", "make_toolchain_types")
 
-toolchain_type(
-    name = "toolchain_type",
-    visibility = ["//visibility:public"],
-)
+make_toolchain_types()
 
-scala_toolchain(
-    name = "default_toolchain_impl",
+make_scala_toolchains(
+    scala_toolchain_name = "default_toolchain_impl",
+    toolchain_name = "default_toolchain",
     scalacopts = [],
+    dependency_mode = "direct",
+    dependency_tracking_method = "default",
+    strict_deps_mode = "default",
+    unused_dependency_checker_mode = "off",
     visibility = ["//visibility:public"],
 )
 
-toolchain(
-    name = "default_toolchain",
-    toolchain = ":default_toolchain_impl",
-    toolchain_type = "@io_bazel_rules_scala//scala:toolchain_type",
-    visibility = ["//visibility:public"],
-)
-
-scala_toolchain(
-    name = "unused_dependency_checker_error_toolchain_impl",
+make_scala_toolchains(
+    scala_toolchain_name = "unused_dependency_checker_error_toolchain_impl",
+    toolchain_name = "unused_dependency_checker_error_toolchain",
+    scalacopts = [],
+    dependency_mode = "direct",
+    dependency_tracking_method = "default",
+    strict_deps_mode = "default",
     unused_dependency_checker_mode = "error",
     visibility = ["//visibility:public"],
 )
 
-toolchain(
-    name = "unused_dependency_checker_error_toolchain",
-    toolchain = ":unused_dependency_checker_error_toolchain_impl",
-    toolchain_type = "@io_bazel_rules_scala//scala:toolchain_type",
-    visibility = ["//visibility:public"],
-)
-
-scala_toolchain(
-    name = "ast_plus_one_deps_strict_deps_unused_deps_error_impl",
+make_scala_toolchains(
+    scala_toolchain_name = "ast_plus_one_deps_strict_deps_unused_deps_error_impl",
+    toolchain_name = "minimal_direct_source_deps",
+    scalacopts = [],
     dependency_mode = "plus-one",
     dependency_tracking_method = "ast",
     strict_deps_mode = "error",
     unused_dependency_checker_mode = "error",
-    visibility = ["//visibility:public"],
-)
-
-toolchain(
-    name = "minimal_direct_source_deps",
-    toolchain = "ast_plus_one_deps_strict_deps_unused_deps_error_impl",
-    toolchain_type = "@io_bazel_rules_scala//scala:toolchain_type",
     visibility = ["//visibility:public"],
 )
 

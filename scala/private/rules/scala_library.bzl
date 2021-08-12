@@ -73,17 +73,12 @@ def _scala_library_impl(ctx):
         ],
     )
 
-_scala_library_attrs = {}
-
-_scala_library_attrs.update(implicit_deps)
-
-_scala_library_attrs.update(common_attrs)
-
-_scala_library_attrs.update(_library_attrs)
-
-_scala_library_attrs.update(resolve_deps)
-
-def make_scala_library(*extras):
+def make_scala_library(scala_major, *extras):
+    _scala_library_attrs = {}
+    _scala_library_attrs.update(implicit_deps(scala_major))
+    _scala_library_attrs.update(common_attrs(scala_major))
+    _scala_library_attrs.update(_library_attrs)
+    _scala_library_attrs.update(resolve_deps(scala_major))
     return rule(
         attrs = _dicts.add(
             _scala_library_attrs,
@@ -95,12 +90,14 @@ def make_scala_library(*extras):
             common_outputs,
             *[extra["outputs"] for extra in extras if "outputs" in extra]
         ),
-        toolchains = ["@io_bazel_rules_scala//scala:toolchain_type"],
+        toolchains = ["@io_bazel_rules_scala//scala:toolchain_type_%s" % scala_major],
         incompatible_use_toolchain_transition = True,
         implementation = _scala_library_impl,
     )
 
-scala_library = make_scala_library()
+scala_library_2_12 = make_scala_library("2.12")
+scala_library_2_13 = make_scala_library("2.13")
+scala_library = scala_library_2_12
 
 # Scala library suite generates a series of scala libraries
 # then it depends on them with a meta one which exports all the sub targets
@@ -151,24 +148,19 @@ def _scala_library_for_plugin_bootstrapping_impl(ctx):
         ],
     )
 
-# the scala compiler plugin used for dependency analysis is compiled using `scala_library`.
-# in order to avoid cyclic dependencies `scala_library_for_plugin_bootstrapping` was created for this purpose,
-# which does not contain plugin related attributes, and thus avoids the cyclic dependency issue
-_scala_library_for_plugin_bootstrapping_attrs = {
-    "build_ijar": attr.bool(default = True),
-}
-
-_scala_library_for_plugin_bootstrapping_attrs.update(implicit_deps)
-
-_scala_library_for_plugin_bootstrapping_attrs.update(_library_attrs)
-
-_scala_library_for_plugin_bootstrapping_attrs.update(resolve_deps)
-
-_scala_library_for_plugin_bootstrapping_attrs.update(
-    common_attrs_for_plugin_bootstrapping,
-)
-
-def make_scala_library_for_plugin_bootstrapping(*extras):
+def make_scala_library_for_plugin_bootstrapping(scala_major, *extras):
+    # the scala compiler plugin used for dependency analysis is compiled using `scala_library`.
+    # in order to avoid cyclic dependencies `scala_library_for_plugin_bootstrapping` was created for this purpose,
+    # which does not contain plugin related attributes, and thus avoids the cyclic dependency issue
+    _scala_library_for_plugin_bootstrapping_attrs = {
+        "build_ijar": attr.bool(default = True),
+    }
+    _scala_library_for_plugin_bootstrapping_attrs.update(implicit_deps(scala_major))
+    _scala_library_for_plugin_bootstrapping_attrs.update(_library_attrs)
+    _scala_library_for_plugin_bootstrapping_attrs.update(resolve_deps(scala_major))
+    _scala_library_for_plugin_bootstrapping_attrs.update(
+        common_attrs_for_plugin_bootstrapping,
+    )
     return rule(
         attrs = _dicts.add(
             _scala_library_for_plugin_bootstrapping_attrs,
@@ -180,12 +172,12 @@ def make_scala_library_for_plugin_bootstrapping(*extras):
             common_outputs,
             *[extra["outputs"] for extra in extras if "outputs" in extra]
         ),
-        toolchains = ["@io_bazel_rules_scala//scala:toolchain_type"],
+        toolchains = ["@io_bazel_rules_scala//scala:toolchain_type_%s" % scala_major],
         incompatible_use_toolchain_transition = True,
         implementation = _scala_library_for_plugin_bootstrapping_impl,
     )
 
-scala_library_for_plugin_bootstrapping = make_scala_library_for_plugin_bootstrapping()
+scala_library_for_plugin_bootstrapping = make_scala_library_for_plugin_bootstrapping("2.12")
 
 ##
 # scala_macro_library
@@ -210,32 +202,26 @@ def _scala_macro_library_impl(ctx):
         ],
     )
 
-_scala_macro_library_attrs = {
-    "main_class": attr.string(),
-    "exports": attr.label_list(allow_files = False),
-}
-
-_scala_macro_library_attrs.update(implicit_deps)
-
-_scala_macro_library_attrs.update(common_attrs)
-
-_scala_macro_library_attrs.update(_library_attrs)
-
-_scala_macro_library_attrs.update(resolve_deps)
-
-# Set unused_dependency_checker_mode default to off for scala_macro_library
-_scala_macro_library_attrs["unused_dependency_checker_mode"] = attr.string(
-    default = "off",
-    values = [
-        "warn",
-        "error",
-        "off",
-        "",
-    ],
-    mandatory = False,
-)
-
-def make_scala_macro_library(*extras):
+def make_scala_macro_library(scala_major, *extras):
+    _scala_macro_library_attrs = {
+        "main_class": attr.string(),
+        "exports": attr.label_list(allow_files = False),
+    }
+    _scala_macro_library_attrs.update(implicit_deps(scala_major))
+    _scala_macro_library_attrs.update(common_attrs(scala_major))
+    _scala_macro_library_attrs.update(_library_attrs)
+    _scala_macro_library_attrs.update(resolve_deps(scala_major))
+    # Set unused_dependency_checker_mode default to off for scala_macro_library
+    _scala_macro_library_attrs["unused_dependency_checker_mode"] = attr.string(
+        default = "off",
+        values = [
+            "warn",
+            "error",
+            "off",
+            "",
+        ],
+        mandatory = False,
+    )
     return rule(
         attrs = _dicts.add(
             _scala_macro_library_attrs,
@@ -247,9 +233,9 @@ def make_scala_macro_library(*extras):
             common_outputs,
             *[extra["outputs"] for extra in extras if "outputs" in extra]
         ),
-        toolchains = ["@io_bazel_rules_scala//scala:toolchain_type"],
+        toolchains = ["@io_bazel_rules_scala//scala:toolchain_type_%s" % scala_major],
         incompatible_use_toolchain_transition = True,
         implementation = _scala_macro_library_impl,
     )
 
-scala_macro_library = make_scala_macro_library()
+scala_macro_library = make_scala_macro_library("2.12")

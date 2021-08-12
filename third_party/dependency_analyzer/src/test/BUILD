@@ -18,7 +18,7 @@ scala_test(
     deps = [
         "//src/java/io/bazel/rulesscala/io_utils",
         "//third_party/dependency_analyzer/src/main:dependency_analyzer",
-        "//third_party/dependency_analyzer/src/main:scala_version",
+        "//third_party/dependency_analyzer/src/main:scala_version_2.12",
         "//third_party/utils/src/test:test_util",
         "@io_bazel_rules_scala_scala_compiler",
         "@io_bazel_rules_scala_scala_library",
@@ -33,7 +33,7 @@ scala_test(
         "io/bazel/rulesscala/dependencyanalyzer/ScalaVersionTest.scala",
     ],
     deps = [
-        "//third_party/dependency_analyzer/src/main:scala_version",
+        "//third_party/dependency_analyzer/src/main:scala_version_2.12",
         "@io_bazel_rules_scala_scala_library",
         "@io_bazel_rules_scala_scala_reflect",
     ],

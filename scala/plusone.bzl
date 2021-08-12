@@ -10,7 +10,12 @@ PlusOneDeps = provider(
 )
 
 def _collect_plus_one_deps_aspect_impl(target, ctx):
-    if (ctx.toolchains["@io_bazel_rules_scala//scala:toolchain_type"].dependency_mode != "plus-one"):
+    if not hasattr(ctx.rule.attr, "_major_scala_version"):
+        return []
+
+    scala_version = ctx.rule.attr._major_scala_version
+    toolchain = "@io_bazel_rules_scala//scala:toolchain_type_%s" % scala_version
+    if (not toolchain in ctx.toolchains) or (ctx.toolchains[toolchain].dependency_mode != "plus-one"):
         return []
     export_plus_one_deps = []
     for exported_dep in getattr(ctx.rule.attr, "exports", []):
@@ -21,8 +26,5 @@ def _collect_plus_one_deps_aspect_impl(target, ctx):
 collect_plus_one_deps_aspect = aspect(
     implementation = _collect_plus_one_deps_aspect_impl,
     attr_aspects = ["deps", "exports"],
-    toolchains = [
-        "@io_bazel_rules_scala//scala:toolchain_type",
-    ],
     incompatible_use_toolchain_transition = True,
 )

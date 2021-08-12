@@ -46,71 +46,73 @@ common_attrs_for_plugin_bootstrapping = {
     ),
 }
 
-common_attrs = {}
-
-common_attrs.update(common_attrs_for_plugin_bootstrapping)
-
-common_attrs.update({
-    "_dependency_analyzer_plugin": attr.label(
-        default = Label(
-            "@io_bazel_rules_scala//third_party/dependency_analyzer/src/main:dependency_analyzer",
+def common_attrs(scala_major):
+    common_attrs = {}
+    common_attrs.update(common_attrs_for_plugin_bootstrapping)
+    common_attrs.update({
+        "_dependency_analyzer_plugin": attr.label(
+            default = Label(
+                "@io_bazel_rules_scala//third_party/dependency_analyzer/src/main:dependency_analyzer_" + scala_major,
+            ),
+            allow_files = [".jar"],
+            mandatory = False,
         ),
-        allow_files = [".jar"],
-        mandatory = False,
-    ),
-    "unused_dependency_checker_mode": attr.string(
-        values = [
-            "warn",
-            "error",
-            "off",
-            "",
-        ],
-        mandatory = False,
-    ),
-    "unused_dependency_checker_ignored_targets": attr.label_list(default = []),
-    "_code_coverage_instrumentation_worker": attr.label(
-        default = "@io_bazel_rules_scala//src/java/io/bazel/rulesscala/coverage/instrumenter",
-        allow_files = True,
-        executable = True,
-        cfg = "host",
-    ),
-})
+        "unused_dependency_checker_mode": attr.string(
+            values = [
+                "warn",
+                "error",
+                "off",
+                "",
+            ],
+            mandatory = False,
+        ),
+        "unused_dependency_checker_ignored_targets": attr.label_list(default = []),
+        "_code_coverage_instrumentation_worker": attr.label(
+            default = "@io_bazel_rules_scala//src/java/io/bazel/rulesscala/coverage/instrumenter",
+            allow_files = True,
+            executable = True,
+            cfg = "host",
+        ),
+    })
+    return common_attrs
 
-implicit_deps = {
-    "_singlejar": attr.label(
-        executable = True,
-        cfg = "host",
-        default = Label("@bazel_tools//tools/jdk:singlejar"),
-        allow_files = True,
-    ),
-    "_zipper": attr.label(
-        executable = True,
-        cfg = "host",
-        default = Label("@bazel_tools//tools/zip:zipper"),
-        allow_files = True,
-    ),
-    "_java_toolchain": attr.label(
-        default = Label("@bazel_tools//tools/jdk:current_java_toolchain"),
-    ),
-    "_host_javabase": attr.label(
-        default = Label("@bazel_tools//tools/jdk:current_java_runtime"),
-        cfg = "exec",
-    ),
-    "_java_runtime": attr.label(
-        default = Label("@bazel_tools//tools/jdk:current_java_runtime"),
-    ),
-    "_scalac": attr.label(
-        executable = True,
-        cfg = "exec",
-        default = Label("@io_bazel_rules_scala//src/java/io/bazel/rulesscala/scalac"),
-        allow_files = True,
-    ),
-    "_exe": attr.label(
-        executable = True,
-        cfg = "host",
-        default = Label("@io_bazel_rules_scala//src/java/io/bazel/rulesscala/exe:exe"),
-    ),
-}
+def implicit_deps(scala_major):
+    return {
+        "_major_scala_version": attr.string(default = scala_major),
+        "_singlejar": attr.label(
+            executable = True,
+            cfg = "host",
+            default = Label("@bazel_tools//tools/jdk:singlejar"),
+            allow_files = True,
+        ),
+        "_zipper": attr.label(
+            executable = True,
+            cfg = "host",
+            default = Label("@bazel_tools//tools/zip:zipper"),
+            allow_files = True,
+        ),
+        "_java_toolchain": attr.label(
+            default = Label("@bazel_tools//tools/jdk:current_java_toolchain"),
+        ),
+        "_host_javabase": attr.label(
+            default = Label("@bazel_tools//tools/jdk:current_java_runtime"),
+            cfg = "exec",
+        ),
+        "_java_runtime": attr.label(
+            default = Label("@bazel_tools//tools/jdk:current_java_runtime"),
+        ),
+        "_scalac": attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("@io_bazel_rules_scala//src/java/io/bazel/rulesscala/scalac:scalac_" + scala_major),
+            allow_files = True,
+        ),
+        "_exe": attr.label(
+            executable = True,
+            cfg = "host",
+            default = Label("@io_bazel_rules_scala//src/java/io/bazel/rulesscala/exe:exe"),
+        ),
+    }
 
 launcher_template = {
     "_java_stub_template": attr.label(
@@ -119,13 +121,14 @@ launcher_template = {
 }
 
 # Single dep to allow IDEs to pickup all the implicit dependencies.
-resolve_deps = {
-    "_scala_toolchain": attr.label_list(
-        default = [
-            Label(
-                "@io_bazel_rules_scala//scala/private/toolchain_deps:scala_library_classpath",
-            ),
-        ],
-        allow_files = False,
-    ),
-}
+def resolve_deps(scala_major):
+    return {
+        "_scala_toolchain": attr.label_list(
+            default = [
+                Label(
+                    "@io_bazel_rules_scala//scala/private/toolchain_deps:scala_library_classpath_" + scala_major,
+                ),
+            ],
+            allow_files = False,
+        ),
+    }

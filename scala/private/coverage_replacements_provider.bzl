@@ -59,7 +59,12 @@ def _from_ctx(ctx, base = {}):
     )
 
 def _aspect_impl(target, ctx):
-    if JavaInfo in target and ctx.configuration.coverage_enabled:
+    if not hasattr(ctx.rule.attr, "_major_scala_version"):
+        return []
+
+    scala_version = ctx.rule.attr._major_scala_version
+    toolchain = "@io_bazel_rules_scala//scala:toolchain_type_%s" % scala_version
+    if toolchain in ctx.toolchains and JavaInfo in target and ctx.configuration.coverage_enabled:
         return [_from_ctx(ctx.rule)]
     else:
         return []
@@ -67,7 +72,6 @@ def _aspect_impl(target, ctx):
 _aspect = aspect(
     attr_aspects = _dependency_attributes,
     implementation = _aspect_impl,
-    toolchains = ["@io_bazel_rules_scala//scala:toolchain_type"],
     incompatible_use_toolchain_transition = True,
 )
 

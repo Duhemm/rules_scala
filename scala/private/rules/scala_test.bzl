@@ -50,56 +50,51 @@ def _scala_test_impl(ctx):
         ],
     )
 
-_scala_test_attrs = {
-    "main_class": attr.string(
-        default = "io.bazel.rulesscala.scala_test.Runner",
-    ),
-    "colors": attr.bool(default = True),
-    "full_stacktraces": attr.bool(default = True),
-    "jvm_flags": attr.string_list(),
-    "reporter_class": attr.string(
-        default = "io.bazel.rules.scala.JUnitXmlReporter",
-    ),
-    "_scalatest": attr.label(
-        default = Label(
-            "@io_bazel_rules_scala//testing/toolchain:scalatest_classpath",
+def make_scala_test(scala_major, *extras):
+    _scala_test_attrs = {
+        "main_class": attr.string(
+            default = "io.bazel.rulesscala.scala_test.Runner",
         ),
-    ),
-    "_scalatest_runner": attr.label(
-        cfg = "host",
-        default = Label("//src/java/io/bazel/rulesscala/scala_test:runner"),
-    ),
-    "_scalatest_reporter": attr.label(
-        default = Label("//scala/support:test_reporter"),
-    ),
-    "_lcov_merger": attr.label(
-        default = Label("@bazel_tools//tools/test/CoverageOutputGenerator/java/com/google/devtools/coverageoutputgenerator:Main"),
-    ),
-}
-
-_test_resolve_deps = {
-    "_scala_toolchain": attr.label_list(
-        default = [
-            Label(
-                "@io_bazel_rules_scala//scala/private/toolchain_deps:scala_library_classpath",
+        "colors": attr.bool(default = True),
+        "full_stacktraces": attr.bool(default = True),
+        "jvm_flags": attr.string_list(),
+        "reporter_class": attr.string(
+            default = "io.bazel.rules.scala.JUnitXmlReporter",
+        ),
+        "_scalatest": attr.label(
+            default = Label(
+                "@io_bazel_rules_scala//testing/toolchain:scalatest_classpath_%s" % scala_major,
             ),
-            Label(
-                "@io_bazel_rules_scala//testing/toolchain:scalatest_classpath",
-            ),
-        ],
-        allow_files = False,
-    ),
-}
+        ),
+        "_scalatest_runner": attr.label(
+            cfg = "host",
+            default = Label("//src/java/io/bazel/rulesscala/scala_test:runner_%s" % scala_major),
+        ),
+        "_scalatest_reporter": attr.label(
+            default = Label("//scala/support:test_reporter_%s" % scala_major),
+        ),
+        "_lcov_merger": attr.label(
+            default = Label("@bazel_tools//tools/test/CoverageOutputGenerator/java/com/google/devtools/coverageoutputgenerator:Main_%s" % scala_major),
+        ),
+    }
+    _test_resolve_deps = {
+        "_scala_toolchain": attr.label_list(
+            default = [
+                Label(
+                    "@io_bazel_rules_scala//scala/private/toolchain_deps:scala_library_classpath_%s" % scala_major,
+                ),
+                Label(
+                    "@io_bazel_rules_scala//testing/toolchain:scalatest_classpath_%s" % scala_major,
+                ),
+            ],
+            allow_files = False,
+        ),
+    }
+    _scala_test_attrs.update(launcher_template)
+    _scala_test_attrs.update(implicit_deps(scala_major))
+    _scala_test_attrs.update(common_attrs(scala_major))
+    _scala_test_attrs.update(_test_resolve_deps)
 
-_scala_test_attrs.update(launcher_template)
-
-_scala_test_attrs.update(implicit_deps)
-
-_scala_test_attrs.update(common_attrs)
-
-_scala_test_attrs.update(_test_resolve_deps)
-
-def make_scala_test(*extras):
     return rule(
         attrs = _dicts.add(
             _scala_test_attrs,
@@ -113,12 +108,12 @@ def make_scala_test(*extras):
             *[extra["outputs"] for extra in extras if "outputs" in extra]
         ),
         test = True,
-        toolchains = ["@io_bazel_rules_scala//scala:toolchain_type"],
+        toolchains = ["@io_bazel_rules_scala//scala:toolchain_type_%s" % scala_major],
         incompatible_use_toolchain_transition = True,
         implementation = _scala_test_impl,
     )
 
-scala_test = make_scala_test()
+scala_test = make_scala_test("2.12")
 
 # This auto-generates a test suite based on the passed set of targets
 # we will add a root test_suite with the name of the passed name

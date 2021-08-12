@@ -48,21 +48,16 @@ def _scala_binary_impl(ctx):
         ],
     )
 
-_scala_binary_attrs = {
-    "main_class": attr.string(mandatory = True),
-    "classpath_resources": attr.label_list(allow_files = True),
-    "jvm_flags": attr.string_list(),
-}
-
-_scala_binary_attrs.update(launcher_template)
-
-_scala_binary_attrs.update(implicit_deps)
-
-_scala_binary_attrs.update(common_attrs)
-
-_scala_binary_attrs.update(resolve_deps)
-
-def make_scala_binary(*extras):
+def make_scala_binary(scala_major, *extras):
+    _scala_binary_attrs = {
+        "main_class": attr.string(mandatory = True),
+        "classpath_resources": attr.label_list(allow_files = True),
+        "jvm_flags": attr.string_list(),
+    }
+    _scala_binary_attrs.update(launcher_template)
+    _scala_binary_attrs.update(implicit_deps(scala_major))
+    _scala_binary_attrs.update(common_attrs(scala_major))
+    _scala_binary_attrs.update(resolve_deps(scala_major))
     return rule(
         attrs = _dicts.add(
             _scala_binary_attrs,
@@ -75,9 +70,9 @@ def make_scala_binary(*extras):
             common_outputs,
             *[extra["outputs"] for extra in extras if "outputs" in extra]
         ),
-        toolchains = ["@io_bazel_rules_scala//scala:toolchain_type"],
+        toolchains = ["@io_bazel_rules_scala//scala:toolchain_type_%s" % scala_major],
         incompatible_use_toolchain_transition = True,
         implementation = _scala_binary_impl,
     )
 
-scala_binary = make_scala_binary()
+scala_binary = make_scala_binary("2.12")

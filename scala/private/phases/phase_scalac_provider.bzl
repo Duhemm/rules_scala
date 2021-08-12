@@ -13,11 +13,12 @@ load(
 )
 
 def phase_scalac_provider(ctx, p):
-    toolchain_type_label = "@io_bazel_rules_scala//scala:toolchain_type"
+    scala_version = ctx.attr._major_scala_version
+    toolchain_type_label = "@io_bazel_rules_scala//scala:toolchain_type_%s" % scala_version
 
-    library_classpath = find_deps_info_on(ctx, toolchain_type_label, "scala_library_classpath").deps
-    compile_classpath = find_deps_info_on(ctx, toolchain_type_label, "scala_compile_classpath").deps
-    macro_classpath = find_deps_info_on(ctx, toolchain_type_label, "scala_macro_classpath").deps
+    library_classpath = find_deps_info_on(ctx, toolchain_type_label, "scala_library_classpath_%s" % scala_version).deps
+    compile_classpath = find_deps_info_on(ctx, toolchain_type_label, "scala_compile_classpath_%s" % scala_version).deps
+    macro_classpath = find_deps_info_on(ctx, toolchain_type_label, "scala_macro_classpath_%s" % scala_version).deps
 
     return _ScalacProvider(
         default_classpath = library_classpath,
